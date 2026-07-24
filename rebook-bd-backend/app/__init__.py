@@ -17,6 +17,10 @@ def create_app():
     # Import models so Flask-Migrate can see them
     from app import models  # noqa: F401
 
+    # Register blueprints
+    from app.auth import auth_bp
+    app.register_blueprint(auth_bp)
+
     @app.route("/api/health")
     def health():
         return {"status": "ok"}
