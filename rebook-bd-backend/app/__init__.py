@@ -14,13 +14,15 @@ def create_app():
     migrate.init_app(app, db)
     CORS(app)
 
-    from app import models  # noqa: F401 — keeps Flask-Migrate aware of all models
+    from app import models  # noqa: F401
 
     # ── Blueprints ────────────────────────────────────────────────────────────
     from app.auth import auth_bp
     from app.listings import listings_bp
+    from app.ratings import ratings_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(listings_bp)
+    app.register_blueprint(ratings_bp)
 
     # ── Utility routes ────────────────────────────────────────────────────────
     @app.route("/api/health")
@@ -29,18 +31,14 @@ def create_app():
 
     @app.route("/api/seed-categories", methods=["POST"])
     def seed_categories():
-        """
-        One-time dev helper — populates the category table.
-        Remove or protect this route before any public deployment.
-        """
         from app.models import Category
         defaults = [
-            ("Textbook",     1.10),
-            ("Calculator",   1.05),
-            ("Lab Equipment",1.00),
-            ("Stationery",   0.90),
-            ("Electronics",  1.05),
-            ("Other",        1.00),
+            ("Textbook",      1.10),
+            ("Calculator",    1.05),
+            ("Lab Equipment", 1.00),
+            ("Stationery",    0.90),
+            ("Electronics",   1.05),
+            ("Other",         1.00),
         ]
         added = []
         for name, mult in defaults:
