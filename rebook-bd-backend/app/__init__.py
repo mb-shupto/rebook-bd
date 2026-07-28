@@ -16,7 +16,6 @@ def create_app():
 
     from app import models  # noqa: F401
 
-    # ── Blueprints ────────────────────────────────────────────────────────────
     from app.auth import auth_bp
     from app.listings import listings_bp
     from app.ratings import ratings_bp
@@ -24,10 +23,20 @@ def create_app():
     app.register_blueprint(listings_bp)
     app.register_blueprint(ratings_bp)
 
-    # ── Utility routes ────────────────────────────────────────────────────────
     @app.route("/api/health")
     def health():
         return {"status": "ok"}
+
+    @app.route("/api/categories", methods=["GET"])
+    def get_categories():
+        from app.models import Category
+        cats = Category.query.order_by(Category.name).all()
+        return {
+            "categories": [
+                {"category_id": c.category_id, "name": c.name, "demand_multiplier": float(c.demand_multiplier)}
+                for c in cats
+            ]
+        }, 200
 
     @app.route("/api/seed-categories", methods=["POST"])
     def seed_categories():
