@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 
@@ -12,7 +13,14 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+
+    # Allow the Vercel frontend origin + localhost for dev.
+    # FRONTEND_URL is set as an env var on Render once you have the Vercel URL.
+    allowed = [
+        "http://localhost:3000",
+        os.environ.get("FRONTEND_URL", ""),
+    ]
+    CORS(app, origins=[o for o in allowed if o])
 
     from app import models  # noqa: F401
 
@@ -33,7 +41,11 @@ def create_app():
         cats = Category.query.order_by(Category.name).all()
         return {
             "categories": [
-                {"category_id": c.category_id, "name": c.name, "demand_multiplier": float(c.demand_multiplier)}
+                {
+                    "category_id":       c.category_id,
+                    "name":              c.name,
+                    "demand_multiplier": float(c.demand_multiplier),
+                }
                 for c in cats
             ]
         }, 200
