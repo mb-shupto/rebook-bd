@@ -1,43 +1,63 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getListings, getUserRatings } from '../api';
+import { getListings, getMe, getUserRatings } from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import ListingCard from '../components/ListingCard';
 import StarRating from '../components/StarRating';
 
 export default function ProfilePage() {
-  const { user }   = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate   = useNavigate();
+  const [profile,     setProfile]     = useState(user);
   const [myListings,  setMyListings]  = useState([]);
   const [myRatings,   setMyRatings]   = useState(null);
   const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
 
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
+    setError('');
+
     Promise.all([
+      getMe(),
       getListings(),
       getUserRatings(user.user_id),
     ])
-      .then(([listRes, ratingRes]) => {
-        setMyListings(listRes.data.listings.filter(l => l.seller_id === user.user_id));
+      .then(([meRes, listRes, ratingRes]) => {
+        setProfile(meRes.data);
+        updateUser(meRes.data);
+        setMyListings(listRes.data.listings.filter(l => l.seller_id === meRes.data.user_id));
         setMyRatings(ratingRes.data);
       })
-      .catch(() => {})
+      .catch((err) => {
+        setError(err.response?.data?.error ?? 'Could not load your full profile right now.');
+      })
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user?.user_id]);
 
   if (!user) return null;
 
+  const activeListingsCount = myListings.filter(l => l.status === 'active').length;
+  const averageListedPrice = myListings.length
+    ? Math.round(myListings.reduce((sum, l) => sum + l.listed_price, 0) / myListings.length)
+    : 0;
+  const memberSince = profile?.member_since
+    ? new Date(profile.member_since).toLocaleDateString()
+    : '—';
+
   return (
     <div className="page">
+      {error && <div className="alert alert-error" style={{ marginBottom: 18 }}>{error}</div>}
+
       {/* Profile header */}
       <div className="profile-header">
-        <div className="profile-avatar">{user.full_name?.[0]?.toUpperCase()}</div>
+        <div className="profile-avatar">{profile?.full_name?.[0]?.toUpperCase()}</div>
         <div>
-          <div className="profile-name">{user.full_name}</div>
-          <div className="profile-email">{user.university_email}</div>
-          {user.department && (
-            <span className="badge badge-blue" style={{ marginTop:8 }}>{user.department}</span>
+          <div className="profile-name">{profile?.full_name}</div>
+          <div className="profile-email">{profile?.university_email}</div>
+          {profile?.department && (
+            <span className="badge badge-blue" style={{ marginTop:8 }}>{profile.department}</span>
           )}
         </div>
         <div className="profile-rep">
@@ -48,6 +68,25 @@ export default function ProfilePage() {
           <div className="profile-rep-label">
             {myRatings?.total_ratings ?? 0} rating{myRatings?.total_ratings !== 1 ? 's' : ''}
           </div>
+        </div>
+      </div>
+
+      <div className="profile-stats">
+        <div className="profile-stat-card">
+          <div className="profile-stat-label">User ID</div>
+          <div className="profile-stat-value">#{profile?.user_id}</div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="profile-stat-label">Member since</div>
+          <div className="profile-stat-value">{memberSince}</div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="profile-stat-label">Active listings</div>
+          <div className="profile-stat-value">{activeListingsCount}</div>
+        </div>
+        <div className="profile-stat-card">
+          <div className="profile-stat-label">Avg listed price</div>
+          <div className="profile-stat-value">৳{averageListedPrice.toLocaleString()}</div>
         </div>
       </div>
 
@@ -97,6 +136,13 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {myRatings?.ratings?.length === 0 && (
+            <div style={{ marginTop: 36 }} className="empty-state">
+              <div className="empty-state-icon">⭐</div>
+              <div className="empty-state-text">No ratings yet. Complete a sale to receive your first review.</div>
             </div>
           )}
         </>

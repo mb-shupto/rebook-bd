@@ -435,6 +435,32 @@ input, select, textarea { font-family: var(--font-body); }
   line-height: 1;
 }
 .profile-rep-label { font-size: 0.75rem; color: var(--c-muted); font-weight: 500; margin-top: 4px; }
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.profile-stat-card {
+  background: var(--c-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--c-border);
+  padding: 14px 16px;
+}
+.profile-stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-muted);
+}
+.profile-stat-value {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-text);
+}
 
 /* ── Listing detail ──────────────────────────────────────────────────────── */
 .listing-detail {
@@ -501,4 +527,5 @@ input, select, textarea { font-family: var(--font-body); }
   .filters { flex-direction: column; }
   .profile-header { flex-direction: column; align-items: flex-start; }
   .profile-rep { margin-left: 0; text-align: left; }
+  .profile-stats { grid-template-columns: 1fr 1fr; }
 }
