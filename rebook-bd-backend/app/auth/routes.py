@@ -42,6 +42,8 @@ def register():
         )
     if len(password) < 8:
         errors["password"] = "Password must be at least 8 characters."
+    if not department:
+        errors["department"] = "Department is required."
     if errors:
         return jsonify({"errors": errors}), 422
 
@@ -66,6 +68,9 @@ def register():
             "user_id": user.user_id,
             "full_name": user.full_name,
             "university_email": user.university_email,
+            "department": user.department,
+            "reputation_score": float(user.reputation_score),
+            "member_since": user.created_at.isoformat(),
         },
     }), 201
 
@@ -105,7 +110,9 @@ def login():
             "user_id": user.user_id,
             "full_name": user.full_name,
             "university_email": user.university_email,
+            "department": user.department,
             "reputation_score": float(user.reputation_score),
+            "member_since": user.created_at.isoformat(),
         },
     }), 200
 
