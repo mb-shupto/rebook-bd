@@ -1,6 +1,6 @@
 import os
-from flask import Flask
-from flask_cors import CORS
+from flask import Flask  # type: ignore[import-not-found]
+from flask_cors import CORS  # type: ignore[import-not-found]
 
 from app.config import Config
 from app.extensions import db, bcrypt, migrate
@@ -9,13 +9,22 @@ from app.extensions import db, bcrypt, migrate
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    
+    # 1. Pull the connection string and immediately verify it
+    db_url = os.environ.get('DATABASE_URL')
+    
+    # 2. Fix the common postgresql:// schema mismatch requirement for SQLAlchemy 1.4+
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    # 3. Securely apply the production URI, falling back ONLY if completely empty
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'postgresql://localhost/rebook'
 
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
 
     # Allow the Vercel frontend origin + localhost for dev.
-    # FRONTEND_URL is set as an env var on Render once you have the Vercel URL.
     allowed = [
         "http://localhost:3000",
         os.environ.get("FRONTEND_URL", ""),
