@@ -42,7 +42,15 @@ def create_app():
 
     @app.route("/api/health")
     def health():
-        return {"status": "ok"}
+        import os
+        raw_env = os.environ.get("DATABASE_URL", "not set")
+        mask_env = raw_env[:20] + "..." if raw_env else "not set"
+        return {
+            "status": "ok",
+            "has_database_url_env": raw_env is not None,
+            "detected url_start": mask_env,
+            "applied url"   : app.config.get("SQLALCHEMY_DATABASE_URI", "not set")[:30] + "..."
+        }
 
     @app.route("/api/categories", methods=["GET"])
     def get_categories():
