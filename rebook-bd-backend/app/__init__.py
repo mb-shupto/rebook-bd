@@ -40,6 +40,15 @@ def create_app():
     app.register_blueprint(listings_bp)
     app.register_blueprint(ratings_bp)
 
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+
     @app.route("/api/health")
     def health():
         import os
